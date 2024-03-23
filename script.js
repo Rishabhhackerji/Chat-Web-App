@@ -1,6 +1,8 @@
 // Import Firebase modules
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.1.0/firebase-app.js';
-import { getFirestore, collection, addDoc, orderBy, query, onSnapshot } from 'https://www.gstatic.com/firebasejs/9.1.0/firebase-firestore.js';
+import { getFirestore, getDocs, collection, addDoc, orderBy, query, onSnapshot } from 'https://www.gstatic.com/firebasejs/9.1.0/firebase-firestore.js';
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.1.0/firebase-auth.js';
+
 
 // Initialize Firebase
 const firebaseConfig = {
@@ -16,20 +18,42 @@ const firebaseConfig = {
 // Initialize Firebase
 const firebaseApp = initializeApp(firebaseConfig);
 const db = getFirestore(firebaseApp);
+const auth = getAuth(firebaseApp);
 
-// Get elements
 const chatList = document.getElementById('chat-list');
-const chatForm = document.getElementById('chat-form');
-const messageInput = document.getElementById('message-input');
+const chatForm = document.getElementById('sendButton');
+const messageInput = document.getElementById('messageInput');
+
+
+auth.onAuthStateChanged((user) => {
+    if (user) {
+        // User is signed in
+        console.log('User is signed in');
+        console.log(window.location);
+    } else {
+        // No user is signed in
+        console.log('No user is signed in');
+        console.log(window.location.pathname);
+        // Redirect to the login or sign-up page only if not already on the login or sign-up page
+        if (window.location.pathname !== '/Auth/login.html' && window.location.pathname !== '/Auth/Register.html') {
+            window.location.href = '/Auth/login.html';
+        }
+    }
+});
+
+
 
 // Listen for form submit
-chatForm.addEventListener('submit', (e) => {
+chatForm.addEventListener('click', (e) => {
   e.preventDefault();
+  console.log("data sent!")
   const message = messageInput.value.trim();
   if (message !== '') {
+    console.log("Rishabh",auth.currentUser);
     addDoc(collection(db, 'messages'), {
       text: message,
-      timestamp: new Date()
+      timestamp: new Date(),
+      userId: auth.currentUser ? auth.currentUser.uid : null
     })
     .then(() => {
       messageInput.value = '';
@@ -54,7 +78,69 @@ onSnapshot(q, (snapshot) => {
 // Display message in the chat
 function displayMessage(message) {
   const li = document.createElement('li');
-  li.textContent = message.text;
+  
+  // Create and append the h3 element for displaying userName
+  const userNameHeader = document.createElement('h5');
+  userNameHeader.textContent = "Rishabh:";
+  li.appendChild(userNameHeader);
+  
+  // Create and append the h5 element for displaying the actual message
+  const messageHeader = document.createElement('h6');
+  messageHeader.textContent = message.text;
+  li.appendChild(messageHeader);
+  
   chatList.appendChild(li);
   chatList.scrollTop = chatList.scrollHeight; // Scroll to bottom
+}
+
+
+ document.getElementById("logout").addEventListener('click', function(){
+ 
+    auth.signOut()
+        .then(() => {
+            // Sign-out successful.
+            alert('User signed out successfully.');
+        })
+        .catch((error) => {
+            // An error happened.
+            console.error('Error signing out:', error);
+        });
+
+ })
+// let userName="";
+ async function getUserData() {
+  try {
+    let uid = localStorage.getItem("UID");
+    console.log(uid);
+    const colRef = collection(db, "users");
+    const snapshot = await getDocs(colRef);
+    let users = [];
+    snapshot.docs.forEach((doc) => {
+      users.push({ ...doc.data(), id: doc.id });
+    });
+    const userWithDesiredEmail = users.find((user) => user.id === uid);
+
+    if (userWithDesiredEmail) {
+      // userName = userWithDesiredEmail.name;
+      return userWithDesiredEmail.name; // Return the userName value
+    } else {
+      console.log("User not found with the desired email.");
+      return null; // Or return null or any other value indicating user not found
+    }
+  } catch (error) {
+    console.error("Error reading user data:", error);
+    throw error; // Throw the error to be caught by the caller
+  }
+}
+
+// Call getUserData and store the result in username variable
+getUserData().then((username) => {
+  console.log(username); // Print the retrieved username
+}).catch((error) => {
+  console.error("Error retrieving user data:", error);
+});
+
+
+function userDataForDisplay(uid){
+  
 }

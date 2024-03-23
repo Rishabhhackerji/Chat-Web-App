@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- </div>end container -->
+    <div class="form-container">
+        <form class="form">
+            <p class="title">Register </p>
+            <p class="message">Signup now and get full access to our app. </p>
+                <label>
+                    <input required="" placeholder="" id="name" type="text" class="input">
+                    <span>Full Name</span>
+                </label>
+
+            <label>
+                <input required="" placeholder="" id="email" type="email" class="input">
+                <span>Email</span>
+            </label>
+
+            <label>
+                <input required="" placeholder="" id="password" type="password" class="input">
+                <span>Password</span>
+            </label>
+            <label>
+                <input required="" placeholder="" type="password" id="confirmPassword" class="input">
+                <span class="papa">Confirm password</span>
+            </label>
+            <p id="message"></p>
+
+            <button type="button" id="register" name="register" class="submit">Register Now</button>
+
+            <p class="signin">Already have an acount ? <a href="Login.html">Login</a> </p>
+        </form>
+    </div>
+
+
+
+    <!-- JavaScript file -->
+    <script type="module" src="Script.js"></script>
+    <script type="module">
+
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-app.js";
+
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-analytics.js";
+
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-auth.js";
+    
+    import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-firestore.js";
+
+    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+    const firebaseConfig = {
+    apiKey: "AIzaSyCNf1UPe0RN9FUrukAIf79o_wgtqbM6Ux8",
+    authDomain: "new-perfect-app.firebaseapp.com",
+    projectId: "new-perfect-app",
+    storageBucket: "new-perfect-app.appspot.com",
+    messagingSenderId: "185180136509",
+    appId: "1:185180136509:web:3bb1ff8e0ebb22324c7654"
+  };
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    const auth = getAuth();
+    const db = getFirestore(app); // Initialize Firestore
+
+    //----- New Registration code start	  
+    document.getElementById("register").addEventListener("click", function () {
+    console.log("main function executed!");
+    var email = document.getElementById("email").value;
+    var password = document.getElementById("password").value;
+    var name = document.getElementById('name').value;
+
+    //For new registration
+    createUserWithEmailAndPassword(auth, email, password)
+        .then((userCredential) => {
+            // Signed in 
+            const user = userCredential.user;
+            console.log("Users",user);
+            let time = getTimeStamp();
+            saveUserData(user.uid, name, email, password, time)
+                        .then(() => {
+                    // Redirect user to home page after data is saved
+                    
+                    localStorage.setItem('UID', user.uid);
+                    localStorage.setItem('Name', name);
+                    localStorage.setItem('email', email);
+                    window.location.href = "../index.html";
+                    alert("Registration successfully!!");
+                })
+                .catch((error) => {
+                    console.error("Error saving user data:", error);
+                    // Handle error, if necessary
+                });
+
+        })
+        .catch((error) => {
+            const errorCode = error.code;
+            const errorMessage = error.message;
+            console.error(errorCode, errorMessage);
+            if (errorCode === "auth/email-already-in-use") {
+                document.getElementById('message').innerText = "Email is already in use";
+            }
+        });
+    });
+    
+    function saveUserData(uid, name, email, password, time) {
+    return new Promise((resolve, reject) => {
+        setDoc(doc(db, "users", uid), {
+            name: name,
+            email: email,
+            password: password,
+            time:time
+        })
+        .then(() => {
+            resolve(); // Resolve the promise if the document is successfully written
+        })
+        .catch((error) => {
+            reject(error); // Reject the promise if an error occurs
+        });
+    });
+}
+//----- End
+
+
+   // Password Confirmer------------------------------------------------
+const passwordField = document.getElementById('password');
+const confirmPasswordField = document.getElementById('confirmPassword');
+const message = document.getElementById('message');
+const papaj =  document.querySelector('.papa');
+
+
+function validatePassword() {
+    if (passwordField.value !== confirmPasswordField.value) {
+        message.textContent = 'Passwords do not match';
+        papaj.style.color='red';
+    } else {
+     papaj.style.color='green';
+     console.log("else executed")
+        message.innerText=""
+    }
+}
+
+passwordField.addEventListener('input', validatePassword);
+confirmPasswordField.addEventListener('input', validatePassword);
+function getTimeStamp(){
+  // Create a new Date object to get the current time
+const currentTime = new Date();
+
+// Get the current hours, minutes, and seconds
+const hours = currentTime.getHours();
+const minutes = currentTime.getMinutes();
+const seconds = currentTime.getSeconds();
+
+// Format the time to ensure leading zeros if necessary
+const formattedHours = hours < 10 ? '0' + hours : hours;
+const formattedMinutes = minutes < 10 ? '0' + minutes : minutes;
+const formattedSeconds = seconds < 10 ? '0' + seconds : seconds;
+
+// Construct the time string in hh:mm:ss format
+const timeString = `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
+
+// Output the current time
+console.log(timeString); // Output example: 13:45:30
+return timeString;
+}
+
+    </script>
+</body>
+
+</html>
