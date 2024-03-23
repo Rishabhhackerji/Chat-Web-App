@@ -35,8 +35,8 @@ auth.onAuthStateChanged((user) => {
         console.log('No user is signed in');
         console.log(window.location.pathname);
         // Redirect to the login or sign-up page only if not already on the login or sign-up page
-        if (window.location.pathname !== '/Auth/login.html' && window.location.pathname !== '/Auth/Register.html') {
-            window.location.href = '/Auth/login.html';
+        if (window.location.pathname !== '/Auth/Login.html' && window.location.pathname !== '/Auth/Register.html') {
+            window.location.href = '/Auth/Login.html';
         }
     }
 });
