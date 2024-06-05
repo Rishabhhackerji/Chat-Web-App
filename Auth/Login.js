@@ -1,12 +1,9 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-app.js";
-
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-analytics.js";
+import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-auth.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-firestore.js";
 
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-auth.js";
-
-import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-firestore.js";
-
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+// Firebase configuration (use environment variables for sensitive data in a real application)
 const firebaseConfig = {
     apiKey: "AIzaSyCNf1UPe0RN9FUrukAIf79o_wgtqbM6Ux8",
     authDomain: "new-perfect-app.firebaseapp.com",
@@ -20,33 +17,60 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 const auth = getAuth();
-const db = getFirestore(app); // Initialize Firestore
+const db = getFirestore(app);
 
-let uid = "Uid here!";
-document.getElementById('loginForm').addEventListener('submit', function(event) {
-            event.preventDefault(); // Prevent the form from submitting normally
+// Login form submission
+document.getElementById('loginForm').addEventListener('submit', async function(event) {
+    event.preventDefault(); // Prevent the form from submitting normally
 
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value.trim();
 
-            signInWithEmailAndPassword(auth, email, password)
-                .then((userCredential) => {
-                    
-                    // User successfully logged in
-                    uid = userCredential.user.uid;
-                    localStorage.setItem('UID',uid);
-                    localStorage.setItem('email',email);
+    // Basic validation
+    if (!email || !password) {
+        displayErrorMessage("Email and password are required.");
+        return;
+    }
 
-                    // Redirect user to dashboard or another page
-                    window.location.href = "../index.html";
-                })
-                .catch((error) => {
-                    // Handle login error
-                    const errorMessage = error.message;
-                    console.error("Login error:", errorMessage);
-                    document.getElementById('errorMessage').textContent = errorMessage;
-                    document.getElementById('errorMessage').style.display = 'block';
-                });
-        });
-        
-   
+    try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        // Fetch user data from Firestore
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        if (userDoc.exists()) {
+            const userData = userDoc.data();
+            localStorage.setItem('Name', userData.name);
+            localStorage.setItem('UID', user.uid);
+            localStorage.setItem('Email', email);
+
+            // Redirect user to dashboard or another page
+            window.location.href = "../index.html";
+        } else {
+            displayErrorMessage("User data not found.");
+        }
+    } catch (error) {
+        displayErrorMessage(getFriendlyErrorMessage(error.code));
+    }
+});
+
+function displayErrorMessage(message) {
+    const errorMessageElement = document.getElementById('errorMessage');
+    errorMessageElement.textContent = message;
+    errorMessageElement.style.display = 'block';
+}
+
+function getFriendlyErrorMessage(errorCode) {
+    switch (errorCode) {
+        case 'auth/invalid-email':
+            return 'Invalid email address format.';
+        case 'auth/user-disabled':
+            return 'This user account has been disabled.';
+        case 'auth/user-not-found':
+            return 'No user found with this email.';
+        case 'auth/wrong-password':
+            return 'Incorrect password.';
+        default:
+            return 'Login failed. Please try again.';
+    }
+}

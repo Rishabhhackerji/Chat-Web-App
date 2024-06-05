@@ -27,10 +27,6 @@ body {
     border-radius: 5px;
   }
   
-  #chat-list li {
-    padding: 10px;
-    border-bottom: 1px solid #eee;
-  }
   
   #chat-form {
     display: flex;
@@ -178,9 +174,17 @@ body {
   
   #chat-list li{
     display: flex;
-    justify-content: flex-start;
     align-items: center;
-    height: 15px;
+    height: fit-content;
     gap: 7px;
-    /* border: 2px solid red; */
+    padding: 5px;
+    border-bottom: 1px solid #eee;
   }
+  
+  #chat-list .left-li{
+   justify-content: flex-start;
+  }
+  #chat-list .right-li{
+    justify-content: flex-end;
+  }
+  

@@ -14,7 +14,6 @@ const firebaseConfig = {
     appId: "1:185180136509:web:3bb1ff8e0ebb22324c7654"
   };
   
- 
 // Initialize Firebase
 const firebaseApp = initializeApp(firebaseConfig);
 const db = getFirestore(firebaseApp);
@@ -53,6 +52,7 @@ chatForm.addEventListener('click', (e) => {
     addDoc(collection(db, 'messages'), {
       text: message,
       timestamp: new Date(),
+      userName: localStorage.getItem("Name"),
       userId: auth.currentUser ? auth.currentUser.uid : null
     })
     .then(() => {
@@ -70,6 +70,7 @@ onSnapshot(q, (snapshot) => {
   snapshot.docChanges().forEach((change) => {
     if (change.type === 'added') {
       const message = change.doc.data();
+      
       displayMessage(message);
     }
   });
@@ -77,19 +78,21 @@ onSnapshot(q, (snapshot) => {
 
 // Display message in the chat
 function displayMessage(message) {
-  const li = document.createElement('li');
-  
-  // Create and append the h3 element for displaying userName
-  const userNameHeader = document.createElement('h5');
-  userNameHeader.textContent = "Rishabh:";
-  li.appendChild(userNameHeader);
-  
-  // Create and append the h5 element for displaying the actual message
-  const messageHeader = document.createElement('h6');
-  messageHeader.textContent = message.text;
-  li.appendChild(messageHeader);
-  
-  chatList.appendChild(li);
+  const liLeft = document.createElement('li');
+  const liRight = document.createElement('li');
+  liLeft.classList.add('left-li'); // Adding a class to liLeft
+liRight.classList.add('right-li'); // Adding a class to liRight
+  if(message.userId===localStorage.getItem("UID")){
+    console.log("papu");
+    liRight.innerHTML = `<h6>${message.text}</h6>`;
+
+  }
+  else{
+    console.log(message.userId +"   "+ localStorage.getItem("UID"));
+    liLeft.innerHTML = `<h5>${message.userName}:</h5><h6>${message.text}</h6>`;
+  }
+  chatList.appendChild(liLeft);
+  chatList.appendChild(liRight);
   chatList.scrollTop = chatList.scrollHeight; // Scroll to bottom
 }
 
@@ -141,6 +144,6 @@ getUserData().then((username) => {
 });
 
 
-function userDataForDisplay(uid){
+// function userDataForDisplay(uid){
   
-}
+// }
